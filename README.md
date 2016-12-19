@@ -1,4 +1,4 @@
-<img src="head.svg" align="right" height="90"/>
+<img src="head.png" align="right" height="90"/>
 # Constructor
 
 A Docker image that can build software in a secure way, including Docker images.
@@ -21,7 +21,7 @@ After successful build, a Docker image called `constructor` is available. If you
 
 ## Process
 
-![Constructor BPMN diagram](constructor.svg)
+[![Constructor BPMN diagram](constructor.png)](constructor.png)
 
 ## Dev Notes
 
