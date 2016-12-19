@@ -57,6 +57,16 @@ mkdir -p /mnt/etc/systemd/system/multi-user.target.wants/ /mnt/etc/systemd/syste
 ln -s /lib/systemd/system/systemd-networkd.service /mnt/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
 ln -s /lib/systemd/system/systemd-networkd.socket /mnt/etc/systemd/system/sockets.target.wants/systemd-networkd.socket
 
+# set up package repositories
+cat > /mnt/etc/apt/sources.list << "EOF"
+deb http://archive.ubuntu.com/ubuntu/ xenial main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial universe
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates universe
+deb http://archive.ubuntu.com/ubuntu/ xenial-security main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial-security universe
+EOF
+
 # prepare target directory
 mkdir -p $TARGET
 

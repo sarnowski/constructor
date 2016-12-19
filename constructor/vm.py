@@ -1,6 +1,7 @@
 import subprocess
 
 import paramiko
+import scp
 
 
 class ConstructionSite:
@@ -16,7 +17,14 @@ class ConstructionSite:
         all_output = []
 
         try:
-            print('> Planning construction site...')
+            print('constructor >> Planning construction site...')
+            # TODO set memory on open() from config
+            # TODO set cpu count on open() from config
+            # TODO run as unprivileged user without read access to secrets etc.
+            # TODO -chroot -runas -sandbox?
+            # TODO create a copy of the disk for later reuse of the same trusted disk image
+            # TODO readonly? copy-on-read?
+            # TODO very long term: support other targets than x86_64 (like arm)
             self.process = subprocess.Popen(['qemu-system-x86_64',
                                              '-kernel', '/constructor/vm/vmlinuz',
                                              '-initrd', '/constructor/vm/initrd',
@@ -37,13 +45,13 @@ class ConstructionSite:
 
                 # just some intermediate logging
                 if 'Welcome to ' in output:
-                    print('> Ramping up construction site...')
+                    print('constructor >> Ramping up construction site...')
 
                 # wait until SSH server is started
                 if 'Started OpenBSD Secure Shell server.' in output:
 
                     # create SSH connection
-                    print('> Requesting access to construction site...')
+                    print('constructor >> Requesting access to construction site...')
                     self.client = paramiko.SSHClient()
                     self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     self.client.connect('127.0.0.1', port=22222,
@@ -52,11 +60,11 @@ class ConstructionSite:
                                         look_for_keys=False)
 
                     # verify connection
-                    print('> Doing first test work in the construction site...')
+                    print('constructor >> Doing first test work in the construction site...')
                     stdin, stdout, stderr = self.client.exec_command('echo "works"')
                     test_output = stdout.readlines()
                     if 'works\n' == test_output[0]:
-                        print('> Construction site opened.')
+                        print('constructor >> Construction site opened.')
                         return
                     else:
                         raise Exception('could not execute test command, output was: {}'.format(test_output))
@@ -83,13 +91,15 @@ class ConstructionSite:
 
         return channel.recv_exit_status() == 0
 
-    def transport_to(self):
-        raise Exception('not implemented yet')
+    def transfer_to(self, source, target):
+        transport = scp.SCPClient(self.client.get_transport())
+        transport.put(source, target, recursive=True, preserve_times=True)
 
-    def transport_from(self):
-        raise Exception('not implemented yet')
+    def transfer_from(self, source, target):
+        transport = scp.SCPClient(self.client.get_transport())
+        transport.get(source, target, recursive=True)
 
     def close(self):
         if self.process is not None:
             self.process.kill()
-        print('> Construction site closed.')
+        print('constructor >> Construction site closed.')

@@ -1,0 +1,13 @@
+input:
+  - type: "git"
+    source: "https://github.com/sarnowski/constructor.git"
+    head: "master"
+    target: "/build"
+
+packages:
+  - docker.io
+  - make
+
+work:
+  - cwd: "/build"
+    command: "make"

@@ -7,7 +7,11 @@ A Docker image that can build software in a secure way, including Docker images.
 
 An example input configuration file can be found in this repository:
 
-[./config-example.yaml](config-example.yaml).
+[./config-example.yaml](config-example.yaml)
+
+`constructor` itself can be build with `constructor` in any Kubernetes cluster:
+
+[./constructor-job.yaml](constructor-job.yaml)
 
 ## Building
 
@@ -39,6 +43,13 @@ Test the generated image:
 Build only `constructor` image and not disk (if already built):
 
     $ make constructor-image
+
+After building, one is able to do simple Python development by doing these steps:
+
+    $ docker run -it -v $(pwd):/work --entrypoint bash constructor
+    # ln -s /work/config-constructor.yaml /config.yaml
+    # cd work
+    # constructor/construct.py    # as often as you want
 
 ## License
 
