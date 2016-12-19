@@ -1,3 +1,9 @@
-/initrd.img-*
-/vmlinuz-*
-/qemu-disk*
+# built VM
+/constructor/vm
+
+# python
+__pycache__
+
+# IntelliJ
+/*.iml
+/.idea

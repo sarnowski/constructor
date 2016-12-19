@@ -2,7 +2,14 @@
 
 set -e
 
-DISK=/work/qemu-disk
+if [ -z "$1" ]; then
+    echo "Usage:  $0 <target>" >&2
+    exit 1
+fi
+
+WORK=/work
+DISK=/qemu-disk
+TARGET=${WORK}/$1
 
 # set up a "disk"
 echo "Creating disk..."
@@ -19,8 +26,7 @@ mount -o loop $DISK /mnt
 
 # install bootstrap tooling
 echo "Installing bootstrap tooling..."
-apt update
-apt install -y debootstrap qemu-utils
+
 
 # install base system on disk
 echo "Bootstrapping disk..."
@@ -52,18 +58,23 @@ mkdir -p /mnt/etc/systemd/system/multi-user.target.wants/ /mnt/etc/systemd/syste
 ln -s /lib/systemd/system/systemd-networkd.service /mnt/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
 ln -s /lib/systemd/system/systemd-networkd.socket /mnt/etc/systemd/system/sockets.target.wants/systemd-networkd.socket
 
+# prepare target directory
+mkdir -p $TARGET
+
 # extract kernel and initramfs so we can skip bootloader
 echo "Extracting kernel..."
-mv -v /mnt/boot/vmlinuz-* /work
-mv -v /mnt/boot/initrd.img-* /work
-chmod 0644 /work/vmlinuz-* /work/initrd.img-*
+mv -v $(ls /mnt/boot/vmlinuz-*) $TARGET/vmlinuz
+mv -v $(ls /mnt/boot/initrd.img-*) $TARGET/initrd
 
 # package disk
 echo "Finishing disk..."
 umount /mnt
-qemu-img convert -O qcow2 -c $DISK ${DISK}.qcow2
+qemu-img convert -O qcow2 -c $DISK $TARGET/disk
 rm $DISK
 
+# finalize
+chmod 0644 $TARGET/*
+
 # done
-echo "Disk finished:"
-ls -lh ${DISK}* /work/vmlinuz-* /work/initrd.img-*
+echo "VM finished:"
+ls -lh $TARGET

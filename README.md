@@ -2,18 +2,32 @@
 
 A Docker image that can build software in a secure way, including Docker images.
 
+## Building
+
+    $ make
+
+
+After successful build, a Docker image called `constructor` is available. If you need to run the Docker command with
+`sudo`, set up the `DOCKER_CMD` variable:
+
+    $ DOCKER_CMD="sudo docker" make
+
 ## Dev Notes
 
 Test the generated image:
 
     $ qemu-system-x86_64 \
-        -kernel ./vmlinuz-4.4.0-21-generic \
-        -initrd ./initrd.img-4.4.0-21-generic \
-        -hda ./qemu-disk.qcow2 \
+        -kernel constructor/vm/vmlinuz \
+        -initrd constructor/vm/initrd \
+        -hda constructor/vm/disk \
         -nographic \
         -append "root=/dev/sda console=ttyS0 rw" \
         -m 1024 \
         -net user,hostfwd=tcp::22222-:22 -net nic
+
+Build only `constructor` image and not disk (if already built):
+
+    $ make constructor-image
 
 ## License
 
