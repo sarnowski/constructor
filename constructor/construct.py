@@ -4,15 +4,17 @@ import vm
 
 
 def construct():
-    v = vm.VirtualMachine()
+    cs = vm.ConstructionSite()
+    cs.open()
 
-    print('Booting VM...')
-    v.start()
+    print('> Updating construction site...')
+    updated = cs.work("apt-get update && apt-get upgrade -y")
+    if updated:
+        print('> Construction site up-to-date')
+    else:
+        print('> Couldn\'t upgrade construction site.')
 
-    print('VM booted, stopping...')
-    v.kill()
-
-    print('VM killed.')
+    cs.close()
 
 
 if __name__ == "__main__":
