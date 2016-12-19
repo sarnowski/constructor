@@ -42,8 +42,7 @@ password_encrypted=$(perl -e 'print crypt($ARGV[0], "password")' $password)
 chroot /mnt usermod -p "$password_encrypted" root
 
 # enable SSH login
-echo "PermitRootLogin yes" >> /mnt/etc/ssh/sshd_config
-echo "PermitEmptyPasswords yes" >> /mnt/etc/ssh/sshd_config
+sed -i 's/PermitRootLogin .*/PermitRootLogin yes/g' /mnt/etc/ssh/sshd_config
 
 # enable networking
 cat > /mnt/etc/systemd/network/wired.network << "EOF"

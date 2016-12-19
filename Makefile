@@ -8,7 +8,6 @@ all: constructor-image
 # create a Docker image with a preinstalled build environment (Docker caches based on Dockerfile.buildenv)
 .PHONY: constructor-buildenv
 constructor-buildenv: buildenv/Dockerfile
-	mkdir -p .empty && \
 	$(DOCKER_CMD) build -t constructor-buildenv buildenv
 
 # run the VM builder within the buildenv (caches based on the build script and disk image)
