@@ -1,21 +1,38 @@
 <img src="head.png" align="right" height="90"/>
 # Constructor
 
-A Docker image that can build software in a secure way, including Docker images.
+A Docker image that can build software in a secure way, including Docker images. This is a building block for
+continuous integration systems and acts as a worker to fetch inputs, builds artifacts and uploads those.
 
 ## Usage
 
-An example input configuration file can be found in this repository:
+`constructor` comes packaged as a Docker image (`sarnowski/constructor`) and is executed by passing in a *plan*.
+A plan itself might require additional files that contain certain secrets to access external repositories.
 
-[./plan-example.yaml](plan-example.yaml)
+### Plans
 
-`constructor` itself can be build with `constructor`:
+* [./plan-example.yaml](plan-example.yaml)
+  * This file shows everything there is.
+* [./plan-constructor.yaml](plan-constructor.yaml)
+  * `constructor` itself can be build with `constructor`.
+* [./plan-example-docker.yaml](plan-example-docker.yaml)
+  * This example shows how to build and push Docker images.
+* [./plan-constructor-kubernetes-job.yaml](plan-constructor-kubernetes-job.yaml)
+  * And also in every Kubernetes cluster.
 
-[./plan-constructor.yaml](plan-constructor.yaml)
+### Plan Discovery
 
-And also in every Kubernetes cluster:
+`constructor` supports multiple ways of discovering its plan:
 
-[./plan-constructor-kubernetes-job.yaml](plan-constructor-kubernetes-job.yaml) 
+* **local**
+  * If a file called `/plan.yaml` is found in the Docker container, it will be used. This is typically mounted into the
+    container by for example `docker run -v $(pwd)/myplan.yaml:/plan.yaml sarnowski/constructor`.
+* **Kubernetes**
+  * If the container runs within Kubernetes, one can use the
+  [Downward API](http://kubernetes.io/docs/user-guide/downward-api/). By mounting a `downwardAPI` volume with the 
+  `fieldPath: metadata.annotations` to `/kubernetes/annotations/`, `constructor` will take its plan from the
+  `constructionPlan` annotation. For an example, see the
+  [./plan-constructor-kubernetes-job.yaml](plan-constructor-kubernetes-job.yaml).
 
 ### KVM acceleration
 
@@ -59,7 +76,7 @@ Build only `constructor` image and not disk (if already built):
 
 After building, one is able to do simple Python development by doing these steps:
 
-    $ docker run -it -v $(pwd):/work --entrypoint bash constructor
+    $ docker run -it -v $(pwd):/work --entrypoint bash sarnowski/constructor
     # ln -s /work/plan-constructor.yaml /plan.yaml
     # cd work
     # constructor/construct.py    # as often as you want

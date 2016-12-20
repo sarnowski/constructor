@@ -17,7 +17,7 @@ $(VM_TARGET)/disk: constructor-buildenv build-vm.sh
 # build the final Docker image including the VM
 .PHONY: constructor-image
 constructor-image: $(VM_TARGET)/disk Dockerfile
-	$(DOCKER_CMD) build -t constructor .
+	$(DOCKER_CMD) build -t sarnowski/constructor .
 
 .PHONY: clean
 clean:

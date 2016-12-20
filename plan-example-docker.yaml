@@ -1,0 +1,37 @@
+# An example plan that shows how to build and push Docker images
+#
+# Prepare Docker registry credentials:
+#
+#    $ docker login
+#    ...
+#    WARNING: login credentials saved in /home/username/.docker/config.json
+#    ...
+#    $ base64 $HOME/.docker/config.json > docker-config
+#
+# Run the plan:
+#
+#    $ docker run \
+#          -v $(pwd)/plan-example-docker.yaml:/plan.yaml \
+#          -v $(pwd)/docker-config:/docker-config \
+#          sarnowski/constructor
+#
+
+resources:
+  cpus: 2
+  memory: 2048  # in MB
+
+input:
+  - type: "git"
+    source: "https://github.com/sarnowski/constructor.git"
+    head: "master"
+    target: "/checkout"
+
+work:
+  - cwd: "/checkout"
+    command: "docker build -f plan-example-docker.dockerfile -t testimage ."
+
+output:
+  - type: Docker
+    source: "testimage"
+    target: "sarnowski/testimage"
+    secret: "/docker-config"
