@@ -1,5 +1,5 @@
+import os
 import subprocess
-
 import paramiko
 import scp
 
@@ -18,27 +18,65 @@ class ConstructionSite:
 
         try:
             print('constructor >> Planning construction site...')
-            # TODO create a copy of the disk for later reuse of the same trusted disk image
-            # TODO readonly? copy-on-read?
+
+            # convert to raw for performance and resizing capabilities (also creates a copy)
+            qemu_img_convert_config = ['qemu-img', 'convert',
+                                       '-f', 'qcow2',
+                                       '-O', 'raw',
+                                       '/constructor/vm/disk', '/vm.disk']
+
+            process = subprocess.Popen(qemu_img_convert_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout, stdin = process.communicate()
+            if process.returncode != 0:
+                print(stdout.decode('utf-8'))
+                raise Exception('failed to convert disk')
+
+            # resize disk to configured value
+            qemu_img_resize_config = ['qemu-img', 'resize',
+                                      '-f', 'raw',
+                                      '/vm.disk',
+                                      self.resources['disk'] if 'disk' in self.resources else '5G']
+
+            process = subprocess.Popen(qemu_img_resize_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout, stdin = process.communicate()
+            if process.returncode != 0:
+                print(stdout.decode('utf-8'))
+                raise Exception('failed to resize disk')
+
+            # resize filesystem to fit disk size
+            ext3_resize_config = ['resize2fs', '-f', '/vm.disk']
+
+            process = subprocess.Popen(ext3_resize_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdout, stdin = process.communicate()
+            if process.returncode != 0:
+                print(stdout.decode('utf-8'))
+                raise Exception('failed to resize filesystem')
+
+            # start the real VM
             # TODO very long term: support other targets than x86_64 (like arm)
+            # TODO tuning https://wiki.mikejung.biz/KVM_/_Xen
             qemu_config = ['qemu-system-x86_64',
                            # use our template
                            '-kernel', '/constructor/vm/vmlinuz',
                            '-initrd', '/constructor/vm/initrd',
-                           '-hda', '/constructor/vm/disk',
+                           # drive setup
+                           # TODO ,cache=writeback,aio=native ?
+                           '-drive', 'if=none,id=drive0,format=raw,file=/vm.disk',
+                           '-device', 'virtio-blk-pci,drive=drive0,scsi=off',
                            # print console output to stdout
                            '-nographic',
-                           '-append', 'root=/dev/sda console=ttyS0 rw',
+                           '-append', 'root=/dev/vda console=ttyS0 rw',
                            # enable networking (NAT from guest to host network + SSH forwarding on localhost)
                            '-net', 'user,hostfwd=tcp::22222-:22',
                            '-net', 'nic',
                            # set up requested resources
-                           '-smp', 'cpus=%s' % (self.resources['cpus'] if 'cpus' in self.resources else 1),
-                           '-m', 'size=%s' % (self.resources['memory'] if 'memory' in self.resources else 1),
+                           '-cpu', 'Nehalem', # TODO is that universal enough? should be in plan?
+                           '-smp', '%s' % self.resources['cpus'] if 'cpus' in self.resources else 1,
+                           '-m', '%s' % self.resources['memory'] if 'memory' in self.resources else 1024,
                            # security hardening
                            '-runas', 'vm',
                            '-chroot', '/vm',
-                           #'-sandbox', 'on',  # TODO currently hangs qemu
+                           # '-sandbox', 'on',  # TODO currently hangs qemu
                            ]
 
             self.process = subprocess.Popen(qemu_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -107,4 +145,8 @@ class ConstructionSite:
     def close(self):
         if self.process is not None:
             self.process.kill()
+            try:
+                os.unlink('/vm.disk')
+            except:
+                pass
             print('constructor >> Construction site closed.')

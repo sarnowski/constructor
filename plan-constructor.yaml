@@ -1,6 +1,7 @@
 resources:
-  cpus: 2
+  cpus: 4
   memory: 4096
+  disk: 10G
 
 input:
   - type: "git"

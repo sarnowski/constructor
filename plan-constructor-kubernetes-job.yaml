@@ -10,6 +10,11 @@ spec:
       annotations:
 
         constructionPlan:
+          resources:
+            cpus: 4
+            memory: 4096
+            disk: 10G
+
           input:
             - type: "git"
               source: "https://github.com/sarnowski/constructor.git"
@@ -23,12 +28,6 @@ spec:
           work:
             - cwd: "/build"
               command: "make"
-
-          output:
-            - type: Docker
-              source: "constructor"
-              target: "sarnowski/constructor"
-              secret: "/secrets/dockerhub"
 
     containers:
       - name: worker

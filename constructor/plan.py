@@ -19,6 +19,9 @@ properties:
       memory:
         type: number
         minimum: 256
+      disk:
+        type: string
+        pattern: "^[0-9]+[a-zA-Z]$"
 
   # list of input definitions
   input:
@@ -68,10 +71,11 @@ properties:
           type: string
         environment:
           type: object
+          # TODO how to describe string->string map the best?
           additionalProperties:
             type: string
         root:
-          type: bool
+          type: boolean
       required:
         - cwd
         - command
@@ -113,12 +117,14 @@ def load_plan(stream):
 def discover_plan():
     # simple local file
     if os.path.isfile('/plan.yaml'):
+        print('constructor >> Found local plan...')
         with open('/plan.yaml', 'r') as stream:
             return load_plan(stream)
 
     # Kubernetes metadata discovery: http://kubernetes.io/docs/user-guide/downward-api/
     # mount "downwardAPI" to "/kubernetes" with "annotations" from fieldPath "metadata.annotations"
     if os.path.isfile('/kubernetes/annotations'):
+        print('constructor >> Found Kubernetes plan...')
         with open('/kubernetes/annotations', 'r') as stream:
             # read key=value from /kubernetes/annotations
             # file looks like:

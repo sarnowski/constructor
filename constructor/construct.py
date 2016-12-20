@@ -13,7 +13,11 @@ import vm
 def construct():
     # Step 1: discover configuration file
     print('constructor > Searching for the construction plans...')
-    plan = discover_plan()
+    try:
+        plan = discover_plan()
+    except Exception as err:
+        print(err)
+        exit(1)
 
     # Step 2: open construction site
     cs = vm.ConstructionSite(plan['resources'] if 'resources' in plan else dict())

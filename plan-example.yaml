@@ -8,6 +8,7 @@
 resources:
   cpus: 2
   memory: 4096  # in MB
+  disk: 3G
 
 # any job can have a list of inputs that get fetched before any task execution is done
 input:
