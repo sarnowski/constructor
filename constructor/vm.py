@@ -70,7 +70,6 @@ class ConstructionSite:
                            '-net', 'user,hostfwd=tcp::22222-:22',
                            '-net', 'nic',
                            # set up requested resources
-                           '-cpu', 'Nehalem', # TODO is that universal enough? should be in plan?
                            '-smp', '%s' % self.resources['cpus'] if 'cpus' in self.resources else 1,
                            '-m', '%s' % self.resources['memory'] if 'memory' in self.resources else 1024,
                            # security hardening
@@ -78,6 +77,9 @@ class ConstructionSite:
                            '-chroot', '/vm',
                            # '-sandbox', 'on',  # TODO currently hangs qemu
                            ]
+
+            if os.path.exists('/dev/kvm'):
+                qemu_config.extend(['-enable-kvm', '-cpu', 'host'])
 
             self.process = subprocess.Popen(qemu_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while self.process.poll() is None:

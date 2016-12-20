@@ -17,6 +17,16 @@ And also in every Kubernetes cluster:
 
 [./plan-constructor-kubernetes-job.yaml](plan-constructor-kubernetes-job.yaml) 
 
+### KVM acceleration
+
+By default, the Docker container will run a full user-space [QEMU](http://www.qemu.org) virtual machine. This works
+and is considered most secure, especially with the hardening features enabled. This leads to full (user space)
+emulation of the CPU which is naturally slower than hardware supported virtualization. If you want to trade off a
+little bit of security for a lot of performance, you can use KVM by just enabling the KVM device in the container.
+`constructor` will automatically pick it up if it detects it. In Docker terms, this would look like this:
+
+    $ docker run --device /dev/kvm:/dev/kvm constructor
+
 ## Building
 
     $ make
@@ -53,6 +63,8 @@ After building, one is able to do simple Python development by doing these steps
     # ln -s /work/plan-constructor.yaml /plan.yaml
     # cd work
     # constructor/construct.py    # as often as you want
+
+Add `--device /dev/kvm:/dev/kvm` to the `docker run` command to enable Linux Virtual Machine acceleration.
 
 ## License
 
