@@ -1,23 +1,23 @@
 import utils
 
 
-def load_handler(config):
+def load_handler(plan):
     inputs = {
-        "git": lambda: GitInput(config)
+        "git": lambda: GitInput(plan)
     }
 
-    handler = inputs[config['type']]
+    handler = inputs[plan['type']]
     if handler is None:
-        raise Exception('input handler for \'%s\' not available' % config['type'])
+        raise Exception('input handler for \'%s\' not available' % plan['type'])
     else:
         return handler()
 
 
 class Input:
-    config = None
+    plan = None
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, plan):
+        self.plan = plan
 
     # downloads the source to the given target directory
     def pull(self, target):
@@ -30,11 +30,11 @@ class Input:
 
 class GitInput(Input):
     def pull(self, target):
-        print('constructor >> Cloning %s ...' % self.config['source'])
+        print('constructor >> Cloning %s ...' % self.plan['source'])
         utils.execute_streaming(['git', 'clone',
-                                 '--branch', self.config['head'],
+                                 '--branch', self.plan['head'],
                                  '--recursive',
-                                 self.config['source'], target])
+                                 self.plan['source'], target])
 
     def preprocess(self, cs):
         pass

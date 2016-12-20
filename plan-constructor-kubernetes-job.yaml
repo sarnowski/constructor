@@ -9,7 +9,7 @@ spec:
     metadata:
       annotations:
 
-        constructionConfig:
+        constructionPlan:
           input:
             - type: "git"
               source: "https://github.com/sarnowski/constructor.git"

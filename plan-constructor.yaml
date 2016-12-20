@@ -1,3 +1,7 @@
+resources:
+  cpus: 2
+  memory: 4096
+
 input:
   - type: "git"
     source: "https://github.com/sarnowski/constructor.git"

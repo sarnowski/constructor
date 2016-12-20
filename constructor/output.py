@@ -1,4 +1,4 @@
-def load_handler(config):
+def load_handler(plan):
     return None
 
 class Output:

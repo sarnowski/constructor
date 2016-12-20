@@ -1,5 +1,8 @@
 FROM ubuntu:16.04
 
+# set up jail
+RUN useradd --no-create-home --system -u 10000 vm && mkdir /vm
+
 # install dependencies
 RUN apt-get update \
     && apt-get install -y qemu-system-x86 \

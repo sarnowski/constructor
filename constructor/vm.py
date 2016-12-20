@@ -8,35 +8,40 @@ class ConstructionSite:
     process = None
     client = None
 
-    memory = None
+    resources = None
 
-    def __init__(self, memory=1024):
-        self.memory = memory
+    def __init__(self, resources):
+        self.resources = resources
 
     def open(self):
         all_output = []
 
         try:
             print('constructor >> Planning construction site...')
-            # TODO set memory on open() from config
-            # TODO set cpu count on open() from config
-            # TODO run as unprivileged user without read access to secrets etc.
-            # TODO -chroot -runas -sandbox?
             # TODO create a copy of the disk for later reuse of the same trusted disk image
             # TODO readonly? copy-on-read?
             # TODO very long term: support other targets than x86_64 (like arm)
-            self.process = subprocess.Popen(['qemu-system-x86_64',
-                                             '-kernel', '/constructor/vm/vmlinuz',
-                                             '-initrd', '/constructor/vm/initrd',
-                                             '-hda', '/constructor/vm/disk',
-                                             '-nographic',
-                                             '-append', 'root=/dev/sda console=ttyS0 rw',
-                                             '-net', 'user,hostfwd=tcp::22222-:22',
-                                             '-net', 'nic',
-                                             '-m', '{}'.format(self.memory)],
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT)
+            qemu_config = ['qemu-system-x86_64',
+                           # use our template
+                           '-kernel', '/constructor/vm/vmlinuz',
+                           '-initrd', '/constructor/vm/initrd',
+                           '-hda', '/constructor/vm/disk',
+                           # print console output to stdout
+                           '-nographic',
+                           '-append', 'root=/dev/sda console=ttyS0 rw',
+                           # enable networking (NAT from guest to host network + SSH forwarding on localhost)
+                           '-net', 'user,hostfwd=tcp::22222-:22',
+                           '-net', 'nic',
+                           # set up requested resources
+                           '-smp', 'cpus=%s' % (self.resources['cpus'] if 'cpus' in self.resources else 1),
+                           '-m', 'size=%s' % (self.resources['memory'] if 'memory' in self.resources else 1),
+                           # security hardening
+                           '-runas', 'vm',
+                           '-chroot', '/vm',
+                           #'-sandbox', 'on',  # TODO currently hangs qemu
+                           ]
 
+            self.process = subprocess.Popen(qemu_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while self.process.poll() is None:
                 # TODO add timeout
 
@@ -73,8 +78,8 @@ class ConstructionSite:
 
         except Exception as err:
             print('An error occurred while ramping up the construction site:')
-            print('\n'.join(all_output))
-            print(err)
+            print(''.join(all_output))
+            raise err
 
     def work(self, command):
         if self.client is None:
@@ -102,4 +107,4 @@ class ConstructionSite:
     def close(self):
         if self.process is not None:
             self.process.kill()
-        print('constructor >> Construction site closed.')
+            print('constructor >> Construction site closed.')
