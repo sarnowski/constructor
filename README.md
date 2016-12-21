@@ -1,6 +1,8 @@
 <img src="head.png" align="right" height="90"/>
 # Constructor
 
+[![Build Status](https://travis-ci.org/sarnowski/constructor.svg?branch=master)](https://travis-ci.org/sarnowski/constructor)
+
 A Docker image that can build software in a secure way, including Docker images. This is a building block for
 continuous integration systems and acts as a worker to fetch inputs, builds artifacts and uploads those.
 
