@@ -24,6 +24,8 @@ def construct():
         print('constructor > Opening a new construction site...')
         cs.open()
 
+        # ---- from here on, we can't trust the construction site anymore - user can now freely execute stuff in it ----
+
         # Step 3: put all inputs in place
         if 'input' in plan:
             print('constructor > Loading all inputs...')
@@ -36,14 +38,11 @@ def construct():
                 print('constructor >> Fetching %s (%s) into %s ...' %
                       (input_plan['source'], input_plan['type'], input_plan['target']))
                 input_handler.pull('/input')
-                # TODO make sure target is a 'good' spot so that one cannot overwrite e.g. / with a repo that contains /bin
                 cs.transfer_to('/input', input_plan['target'])
                 input_handler.preprocess(cs)
 
                 # cleanup temporary storage
                 shutil.rmtree('/input')
-
-        # ---- from here on, we can't trust the construction site anymore - user can now freely execute stuff in it ----
 
         # Step 4: install packages
         if 'packages' in plan:
@@ -52,7 +51,7 @@ def construct():
             success = cs.work('apt-get update')
             if not success:
                 raise Exception('could not update package list')
-            success = cs.work('DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" --force-yes install --yes %s' % packages)
+            success = cs.work('DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" --force-yes install --yes --no-install-recommends %s' % packages)
             if not success:
                 raise Exception('could not install packages')
 
@@ -63,6 +62,7 @@ def construct():
                 command = work_plan['command']
                 print('constructor >> Executing: %s' % command)
 
+                # TODO execute as unprivileged user if not exlpicitly configured to be executed as root; requires shell escaping and 'su -c'
                 success = cs.work('cd %s && %s' % (work_plan['cwd'], command))
                 # TODO how to detect if the command itself is failing or the command couldn't be invoked to begin with?
                 if not success:
@@ -79,12 +79,13 @@ def construct():
 
             # Step 6.1: close the construction site (we might need a new site for post processing of outputs)
             cs.close()
+            cs = None
 
             # Step 6.2: postprocess and push outputs
             for output_plan in plan['output']:
                 output_handler = output.load_handler(output_plan)
                 if output_handler.needs_cs_postprocessing():
-                    print('constructor >> Processing %s (%s) ...' % (output_plan['source'], output_plan['type']))
+                    print('constructor >> Postprocessing %s (%s) in a new construction site...' % (output_plan['source'], output_plan['type']))
                     output_handler.postprocess('/output')  # TODO unique deterministic directory
                 print('constructor >> Publishing %s (%s) as %s ...' % (output_plan['source'], output_plan['type'], output_plan['target']))
                 output_handler.push('/output')
@@ -92,7 +93,8 @@ def construct():
         print('constructor > Build succeeded.')
 
     except Exception as err:
-        cs.close()
+        if cs is not None:
+            cs.close()
 
         print('constructor > Build failed: %s' % err)
 

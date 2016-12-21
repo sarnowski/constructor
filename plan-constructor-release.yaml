@@ -10,7 +10,6 @@ input:
     target: "/build"
 
 packages:
-  - docker.io
   - make
 
 work:

@@ -23,6 +23,11 @@ input:
     target: "/work/myapp"
 
 
+# a list of OS packages that should be installed prior to work command executions
+packages:
+  - maven
+  - build-essentials
+
 # after all inputs are fetched and transferred into the construction site, these commands are executed in order
 # if one fails, everything stops immediately
 work:

@@ -40,7 +40,6 @@ spec:
               target: "/build"
 
           packages:
-            - docker.io
             - make
 
           work:

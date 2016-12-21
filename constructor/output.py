@@ -43,4 +43,10 @@ class DockerOutput(Output):
         cs.transfer_from('/docker-image', tmp)
 
     def push(self, tmp):
-        utils.execute_streaming('ls -lR %s' % tmp)
+        utils.execute_streaming('ls -lR %s*' % tmp)
+        # cs.transfer_to('%s/docker-image' % tmp, '/docker-image')
+        # cs.transfer_to(plan['secret'], '/.docker-config.yaml')
+        # cs.work('docker restore < /docker-image')
+        # cs.work('docker tag %target %source')
+        # ...sign...
+        # cs.work('docker ush %target')

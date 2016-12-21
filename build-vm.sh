@@ -33,10 +33,27 @@ echo "Bootstrapping disk..."
 debootstrap \
     --arch=amd64 \
     --variant=minbase \
-    --include=linux-image-generic,locales,isc-dhcp-client,net-tools,openssh-server \
+    --components=main,universe \
+    --include=linux-image-generic,locales,isc-dhcp-client,net-tools,openssh-server,ca-certificates,docker.io \
     xenial /mnt http://archive.ubuntu.com/ubuntu/
 
+# set up package repositories
+echo "Setting up base configuration..."
+cat > /mnt/etc/apt/sources.list << "EOF"
+deb http://archive.ubuntu.com/ubuntu/ xenial main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial universe
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates universe
+deb http://archive.ubuntu.com/ubuntu/ xenial-security main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial-security universe
+EOF
+
+# set up unprivileged user; can be used by builds
+# explicitly do not add user to Docker group, else it would always have root access. Execute 'docker build' as root.
+useradd --create-home worker
+
 # setup root password for ssh access
+echo "Enabling remote access for Docker container..."
 password="constructor"
 password_encrypted=$(perl -e 'print crypt($ARGV[0], "password")' $password)
 chroot /mnt usermod -p "$password_encrypted" root
@@ -56,16 +73,6 @@ EOF
 mkdir -p /mnt/etc/systemd/system/multi-user.target.wants/ /mnt/etc/systemd/system/sockets.target.wants/
 ln -s /lib/systemd/system/systemd-networkd.service /mnt/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
 ln -s /lib/systemd/system/systemd-networkd.socket /mnt/etc/systemd/system/sockets.target.wants/systemd-networkd.socket
-
-# set up package repositories
-cat > /mnt/etc/apt/sources.list << "EOF"
-deb http://archive.ubuntu.com/ubuntu/ xenial main restricted
-deb http://archive.ubuntu.com/ubuntu/ xenial-updates main restricted
-deb http://archive.ubuntu.com/ubuntu/ xenial universe
-deb http://archive.ubuntu.com/ubuntu/ xenial-updates universe
-deb http://archive.ubuntu.com/ubuntu/ xenial-security main restricted
-deb http://archive.ubuntu.com/ubuntu/ xenial-security universe
-EOF
 
 # prepare target directory
 mkdir -p $TARGET
