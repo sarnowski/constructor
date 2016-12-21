@@ -21,4 +21,4 @@ constructor-image: $(VM_TARGET)/disk Dockerfile
 
 .PHONY: clean
 clean:
-	rm -rf $(TARGET)
+	rm -rf $(VM_TARGET)

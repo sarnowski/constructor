@@ -10,7 +10,7 @@
 #
 # Run the plan:
 #
-#    $ docker run \
+#    $ docker run -it \
 #          -v $(pwd)/plan-example-docker.yaml:/plan.yaml \
 #          -v $(pwd)/docker-config:/docker-config \
 #          sarnowski/constructor

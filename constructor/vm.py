@@ -133,6 +133,8 @@ class ConstructionSite:
             if output is not '':
                 # TODO possible future bug when byte 2047 is in the middle of an utf-8 sequence
                 print(output.decode('utf-8'), end='')
+        output = channel.recv(2048)
+        print(output.decode('utf-8'))
 
         return channel.recv_exit_status() == 0
 

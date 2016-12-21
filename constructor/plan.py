@@ -9,6 +9,13 @@ type: object
 additionalProperties: true
 properties:
 
+  # internal implementation configurations
+  internal:
+    type: object
+    properties:
+      returnZeroOnError:
+        type: boolean
+
   # resource definition
   resources:
     type: object
@@ -110,6 +117,8 @@ properties:
 def load_plan(stream):
     plan = yaml.load(stream)
     schema = yaml.load(plan_schema)
+
+    print('constructor >> Validating construction syntax...')
     jsonschema.validate(plan, schema)
     return plan
 
@@ -130,14 +139,15 @@ def discover_plan():
             # file looks like:
             #      key1="value1"
             #      key2=123
-            #      key3="{\"foo\": \"bar\"}"
+            #      key3="\"foo\": \"bar\"\n"
             # replace first = with : to make valid YAML out of it
-
-            content = stream.read()
-            content.replace('=', ': ', 1)
-            annotations = yaml.load(content)
+            lines = [line.replace('=', ': ', 1) for line in stream.readlines()]
 
             # parse yaml from key "constructionPlan"
+            annotations = yaml.load('\n'.join(lines))
+            if 'constructionPlan' not in annotations:
+                raise Exception('constructionPlan annotation not found in Kubernetes metadata')
+
             return load_plan(annotations['constructionPlan'])
 
     raise Exception('could not discover any plans')

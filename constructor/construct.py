@@ -5,8 +5,6 @@ import input
 from plan import discover_plan
 import output
 import os.path
-import sys
-import traceback
 import vm
 
 
@@ -61,7 +59,7 @@ def construct():
             print('constructor > Executing all work commands...')
             for work_plan in plan['work']:
                 command = work_plan['command']
-                print('constructor > Executing: %s' % command)
+                print('constructor >> Executing: %s' % command)
 
                 success = cs.work('cd %s && %s' % (work_plan['cwd'], command))
                 # TODO how to detect if the command itself is failing or the command couldn't be invoked to begin with?
@@ -90,10 +88,12 @@ def construct():
     except Exception as err:
         cs.close()
 
-        #traceback.print_exc(file=sys.stdout)  # not helpful in most cases
         print('constructor > Build failed: %s' % err)
 
-        exit(1)
+        if 'internal' in plan and 'returnZeroOnError' in plan['internal'] and plan['internal']['returnZeroOnError']:
+            exit(0)
+        else:
+            exit(1)
 
 
 if __name__ == "__main__":

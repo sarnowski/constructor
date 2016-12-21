@@ -1,15 +1,33 @@
-#apiVersion: batch/v1  # TODO soon... (K8s 1.5+)
-apiVersion: extensions/v1beta1
+# more information about Kubernetes Job's can be found here:
+#   http://kubernetes.io/docs/user-guide/jobs/
+#
+# Usage:
+#
+#    $ kubectl apply -f plan-constructor-kubernetes-job.yaml
+#    $ kubectl describe job constructor
+#
+
+apiVersion: batch/v1
 kind: Job
 metadata:
   name: constructor
 spec:
+  # depends on your actual jobs how you want to handle them
+  #activeDeadlineSeconds: 30
+
   template:
 
     metadata:
+      name: constructor
+
       annotations:
 
-        constructionPlan:
+        constructionPlan: |
+          internal:
+            # this is necessary for Kubernetes Jobs as it would rerun the job
+            # if the container exits with non-zero status code
+            returnZeroOnError: true
+
           resources:
             cpus: 4
             memory: 4096
@@ -29,20 +47,22 @@ spec:
             - cwd: "/build"
               command: "make"
 
-    containers:
-      - name: worker
-        image: sarnowski/constructor:latest
-        volumeMounts:
-          - name: config
-            mountPath: /config
-            readOnly: false
+    spec:
+      containers:
+        - name: worker
+          image: sarnowski/constructor:latest
+          volumeMounts:
+            - name: metadata
+              mountPath: /kubernetes
+              readOnly: false
 
-    volumes:
-      - name: config
-        downwardAPI:
-          items:
-            - path: "annotations"
-              fieldRef:
-                fieldPath: metadata.annotations
+      volumes:
+        - name: metadata
+          downwardAPI:
+            items:
+              - path: "annotations"
+                fieldRef:
+                  fieldPath: metadata.annotations
 
+      restartPolicy: Never
 # TODO add secret volumes
