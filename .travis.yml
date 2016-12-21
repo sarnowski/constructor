@@ -1,0 +1,9 @@
+language: c
+
+sudo: required
+services:
+  - docker
+
+script:
+  - make
+  - docker run -it -v $(pwd)/plan-constructor.yaml:/plan.yaml sarnowski/constructor
