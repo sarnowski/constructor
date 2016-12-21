@@ -50,14 +50,14 @@ class ConstructionSite:
                            '-initrd', '/constructor/vm/initrd',
                            # drive setup
                            # TODO ,cache=writeback,aio=native ?
-                           '-drive', 'if=none,id=drive0,format=raw,file=/vm.disk',
-                           '-device', 'virtio-blk-pci,drive=drive0,scsi=off',
+                           '-drive', 'if=none,id=vmdrive,format=raw,file=/vm.disk',
+                           '-device', 'virtio-blk-pci,drive=vmdrive',
                            # print console output to stdout
                            '-nographic',
                            '-append', 'root=/dev/vda console=ttyS0 rw',
                            # enable networking (NAT from guest to host network + SSH forwarding on localhost)
-                           '-net', 'user,hostfwd=tcp::22222-:22',
-                           '-net', 'nic',
+                           '-netdev', 'user,id=vmnet,hostfwd=tcp::22222-:22',
+                           '-device', 'virtio-net-pci,netdev=vmnet',
                            # set up requested resources
                            '-smp', '%s' % self.resources['cpus'] if 'cpus' in self.resources else 1,
                            '-m', '%s' % self.resources['memory'] if 'memory' in self.resources else 1024,
@@ -117,13 +117,13 @@ class ConstructionSite:
         channel = self.client.get_transport().open_session()
         channel.exec_command(command)
 
-        while not channel.exit_status_ready():
-            output = channel.recv(2048)
-            if output is not '':
-                # TODO possible future bug when byte 2047 is in the middle of an utf-8 sequence
-                print(output.decode('utf-8'), end='')
-        output = channel.recv(2048)
-        print(output.decode('utf-8'))
+        while True:
+            if channel.recv_ready():
+                print(channel.recv(4096).decode('utf-8'), end='')
+            if channel.recv_stderr_ready():
+                print(channel.recv_stderr(4096).decode('utf-8'), end='')
+            if channel.exit_status_ready():
+                break
 
         return channel.recv_exit_status() == 0
 

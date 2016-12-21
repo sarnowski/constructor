@@ -14,5 +14,9 @@ RUN apt-get update \
 # add own software
 COPY constructor /constructor
 
+# without this var, Docker might get output very delayed
+# https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUNBUFFERED
+ENV PYTHONUNBUFFERED "yes"
+
 # make it the default execution
 ENTRYPOINT /constructor/construct.py

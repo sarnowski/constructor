@@ -30,8 +30,8 @@ class Input:
 
 class GitInput(Input):
     def pull(self, target):
-        print('constructor >> Cloning %s ...' % self.plan['source'])
         utils.execute_streaming(['git', 'clone',
+                                 '--quiet',
                                  '--branch', self.plan['head'],
                                  '--recursive',
                                  self.plan['source'], target])

@@ -33,6 +33,8 @@ def construct():
                 # temporary storage
                 os.mkdir('/input', mode=0o700)
 
+                print('constructor >> Fetching %s (%s) into %s ...' %
+                      (input_plan['source'], input_plan['type'], input_plan['target']))
                 input_handler.pull('/input')
                 # TODO make sure target is a 'good' spot so that one cannot overwrite e.g. / with a repo that contains /bin
                 cs.transfer_to('/input', input_plan['target'])
@@ -50,7 +52,7 @@ def construct():
             success = cs.work('apt-get update')
             if not success:
                 raise Exception('could not update package list')
-            success = cs.work('apt-get install -y %s' % packages)
+            success = cs.work('DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" --force-yes install --yes %s' % packages)
             if not success:
                 raise Exception('could not install packages')
 
@@ -72,7 +74,8 @@ def construct():
             for output_plan in plan['output']:
                 # get the correct handler for the output type
                 output_handler = output.load_handler(output_plan)
-                output_handler.pull('/output')  # TODO unique deterministic directory
+                print('constructor >> Pulling %s (%s) from construction site...' % (output_plan['source'], output_plan['type']))
+                output_handler.pull(cs, '/output')  # TODO unique deterministic directory
 
             # Step 6.1: close the construction site (we might need a new site for post processing of outputs)
             cs.close()
@@ -80,7 +83,10 @@ def construct():
             # Step 6.2: postprocess and push outputs
             for output_plan in plan['output']:
                 output_handler = output.load_handler(output_plan)
-                output_handler.postprocess('/output')  # TODO unique deterministic directory
+                if output_handler.needs_cs_postprocessing():
+                    print('constructor >> Processing %s (%s) ...' % (output_plan['source'], output_plan['type']))
+                    output_handler.postprocess('/output')  # TODO unique deterministic directory
+                print('constructor >> Publishing %s (%s) as %s ...' % (output_plan['source'], output_plan['type'], output_plan['target']))
                 output_handler.push('/output')
 
         print('constructor > Build succeeded.')

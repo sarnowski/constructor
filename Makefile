@@ -19,6 +19,10 @@ $(VM_TARGET)/disk: constructor-buildenv build-vm.sh
 constructor-image: $(VM_TARGET)/disk Dockerfile
 	$(DOCKER_CMD) build -t sarnowski/constructor .
 
+.PHONY: constructor-image-only
+constructor-image-only: Dockerfile
+	$(DOCKER_CMD) build -t sarnowski/constructor .
+
 .PHONY: clean
 clean:
 	rm -rf $(VM_TARGET)

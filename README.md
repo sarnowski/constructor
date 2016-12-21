@@ -81,6 +81,11 @@ After building, one is able to do simple Python development by doing these steps
     # cd work
     # constructor/construct.py    # as often as you want
 
+To only build the final Docker image with all Python scripts but without rebuilding the disk image, use the
+`constructor-image-only` target:
+
+    $ make constructor-image-only
+
 ## License
 
 Copyright (c) 2016, Tobias Sarnowski

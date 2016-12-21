@@ -1,0 +1,24 @@
+resources:
+  cpus: 4
+  memory: 4096
+  disk: 10G
+
+input:
+  - type: "git"
+    source: "https://github.com/sarnowski/constructor.git"
+    head: "master"
+    target: "/build"
+
+packages:
+  - docker.io
+  - make
+
+work:
+  - cwd: "/build"
+    command: "make"
+
+output:
+  - type: Docker
+    source: "sarnowski/constructor"
+    target: "sarnowski/constructor"
+    secret: "/docker-config"

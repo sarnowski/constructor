@@ -47,7 +47,7 @@ sed -i 's/PermitRootLogin .*/PermitRootLogin yes/g' /mnt/etc/ssh/sshd_config
 # enable networking
 cat > /mnt/etc/systemd/network/wired.network << "EOF"
 [Match]
-Name=ens3
+Name=ens4
 
 [Network]
 DHCP=ipv4

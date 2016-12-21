@@ -26,6 +26,9 @@ input:
     head: "master"
     target: "/checkout"
 
+packages:
+  - docker.io
+
 work:
   - cwd: "/checkout"
     command: "docker build -f plan-example-docker.dockerfile -t testimage ."
