@@ -42,7 +42,7 @@ emulation of the CPU which is naturally slower than hardware supported virtualiz
 security for performance, you can use KVM by just enabling the KVM device in the container. `constructor` will
 automatically pick it up if it detects it. In Docker terms, this would look like this:
 
-    $ docker run --device /dev/kvm:/dev/kvm constructor
+    $ docker run --device /dev/kvm:/dev/kvm sarnowski/constructor
 
 ## Building
 
@@ -72,7 +72,11 @@ Test the generated image:
 
 After building, one is able to do simple Python development by doing these steps:
 
-    $ docker run -it --rm --device /dev/kvm:/dev/kvm -v $(pwd):/work --entrypoint bash sarnowski/constructor
+    $ docker run -it --rm \
+        --device /dev/kvm:/dev/kvm \
+        --volume $(pwd):/work \
+        --entrypoint bash \
+        sarnowski/constructor
     # ln -s /work/plan-constructor.yaml /plan.yaml
     # cd work
     # constructor/construct.py    # as often as you want

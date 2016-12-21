@@ -3,6 +3,8 @@ import subprocess
 import paramiko
 import scp
 
+import utils
+
 
 class ConstructionSite:
     process = None
@@ -17,42 +19,29 @@ class ConstructionSite:
         all_output = []
 
         try:
-            print('constructor >> Planning construction site...')
+            print('constructor >> Marking territory for construction site...')
 
             # convert to raw for performance and resizing capabilities (also creates a copy)
             qemu_img_convert_config = ['qemu-img', 'convert',
                                        '-f', 'qcow2',
                                        '-O', 'raw',
                                        '/constructor/vm/disk', '/vm.disk']
-
-            process = subprocess.Popen(qemu_img_convert_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            stdout, stdin = process.communicate()
-            if process.returncode != 0:
-                print(stdout.decode('utf-8'))
-                raise Exception('failed to convert disk')
+            utils.execute_silently(qemu_img_convert_config)
 
             # resize disk to configured value
             qemu_img_resize_config = ['qemu-img', 'resize',
                                       '-f', 'raw',
                                       '/vm.disk',
                                       self.resources['disk'] if 'disk' in self.resources else '5G']
-
-            process = subprocess.Popen(qemu_img_resize_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            stdout, stdin = process.communicate()
-            if process.returncode != 0:
-                print(stdout.decode('utf-8'))
-                raise Exception('failed to resize disk')
+            utils.execute_silently(qemu_img_resize_config)
 
             # resize filesystem to fit disk size
             ext3_resize_config = ['resize2fs', '-f', '/vm.disk']
-
-            process = subprocess.Popen(ext3_resize_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            stdout, stdin = process.communicate()
-            if process.returncode != 0:
-                print(stdout.decode('utf-8'))
-                raise Exception('failed to resize filesystem')
+            utils.execute_silently(ext3_resize_config)
 
             # start the real VM
+            print('constructor >> Preparing ground for construction site...')
+
             # TODO very long term: support other targets than x86_64 (like arm)
             # TODO tuning https://wiki.mikejung.biz/KVM_/_Xen
             qemu_config = ['qemu-system-x86_64',
@@ -81,7 +70,7 @@ class ConstructionSite:
             if os.path.exists('/dev/kvm'):
                 qemu_config.extend(['-enable-kvm', '-cpu', 'host'])
 
-            self.process = subprocess.Popen(qemu_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.process = subprocess.Popen(qemu_config, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
             while self.process.poll() is None:
                 # TODO add timeout
 
