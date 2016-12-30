@@ -1,5 +1,6 @@
 VM_TARGET=constructor/vm
 DOCKER_CMD?=docker
+ADDITIONAL_PACKAGES=
 
 # default action
 .PHONY: all
@@ -13,7 +14,7 @@ constructor-buildenv: buildenv/Dockerfile
 # run the VM builder within the buildenv (caches based on the build script and disk image)
 $(VM_TARGET)/disk: constructor-buildenv build-vm.sh
 	$(DOCKER_CMD) run --tty --privileged --rm --volume $(PWD):/work \
-	    constructor-buildenv /work/build-vm.sh $(VM_TARGET)
+	    constructor-buildenv /work/build-vm.sh $(VM_TARGET) $(ADDITIONAL_PACKAGES)
 
 # build the final Docker image including the VM
 .PHONY: constructor-image

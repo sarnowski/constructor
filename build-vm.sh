@@ -3,13 +3,21 @@
 set -e
 
 if [ -z "$1" ]; then
-    echo "Usage:  $0 <target>" >&2
+    echo "Usage:  $0 <target> [additional packages]" >&2
     exit 1
 fi
+
+# used if not explicitly given on command call
+# giving an own list overrides this
+DEFAULT_ADDITIONAL_PACKAGES="apt-transport-https,ca-certificates,docker.io,build-essential,openjdk-8-jdk,maven,npm,python3-pip,python3-dev,python3-setuptools,libssl-dev,libffi-dev,golang"
 
 WORK=/work
 DISK=/qemu-disk
 TARGET=${WORK}/$1
+
+ADDITIONAL_PACKAGES=$2
+[ -z "$ADDITIONAL_PACKAGES" ] && ADDITIONAL_PACKAGES=$DEFAULT_ADDITIONAL_PACKAGES
+[ ! -z "$ADDITIONAL_PACKAGES" ] && ADDITIONAL_PACKAGES=",$ADDITIONAL_PACKAGES"
 
 # set up a "disk"
 echo "Creating disk..."
@@ -34,7 +42,7 @@ debootstrap \
     --arch=amd64 \
     --variant=minbase \
     --components=main,universe \
-    --include=linux-image-generic,locales,isc-dhcp-client,net-tools,openssh-server,ca-certificates,docker.io \
+    --include=linux-image-generic,locales,isc-dhcp-client,net-tools,openssh-server${ADDITIONAL_PACKAGES} \
     xenial /mnt http://archive.ubuntu.com/ubuntu/
 
 # set up package repositories
@@ -77,11 +85,19 @@ ln -s /lib/systemd/system/systemd-networkd.socket /mnt/etc/systemd/system/socket
 # clean this; gets copied from Docker container no boot
 rm /mnt/etc/resolv.conf
 
+echo "Cleaning up disk..."
+
+# clean downloaded archives
+chroot /mnt apt-get clean
+# we only have virtio hardware, no need for binary firmware blobs
+rm -rf mnt/lib/firmware/*
+
+echo "Extracting kernel..."
+
 # prepare target directory
 mkdir -p $TARGET
 
 # extract kernel and initramfs so we can skip bootloader
-echo "Extracting kernel..."
 mv -v $(ls /mnt/boot/vmlinuz-*) $TARGET/vmlinuz
 mv -v $(ls /mnt/boot/initrd.img-*) $TARGET/initrd
 

@@ -55,6 +55,13 @@ After successful build, a Docker image called `constructor` is available. If you
 
     $ DOCKER_CMD="sudo docker" make
 
+The build will install a couple of opinionated packages by default including Java, JavaScript, Go and Python
+dependencies. If these are not desired or you want more, you can specify the list of packages explicitly:
+
+    $ make ADDITIONAL_PACKAGES=maven,golang,npm
+
+For a reference what the default looks like, look at the head of [./build-vm.sh](./build-vm.sh).
+
 ## Process
 
 [![Constructor BPMN diagram](constructor.png)](constructor.png)
