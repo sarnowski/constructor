@@ -3,6 +3,8 @@ import os
 import yaml
 
 
+# TODO add possibility to specify additional trusted CAs (like internal corporate CAs)
+
 plan_schema="""
 
 type: object

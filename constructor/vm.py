@@ -2,7 +2,7 @@ import os
 import subprocess
 import paramiko
 import scp
-
+import sys
 import utils
 
 
@@ -97,11 +97,14 @@ class ConstructionSite:
                     print('constructor >> Doing first test work in the construction site...')
                     stdin, stdout, stderr = self.client.exec_command('echo "works"')
                     test_output = stdout.readlines()
-                    if 'works\n' == test_output[0]:
-                        print('constructor >> Construction site opened.')
-                        return
-                    else:
+                    if not 'works\n' == test_output[0]:
                         raise Exception('could not execute test command, output was: {}'.format(test_output))
+
+                    print('constructor >> Enabling access to the outside world in the construction site...')
+                    self.transfer_to('/etc/resolv.conf', '/etc')
+
+                    print('constructor >> Construction site opened.')
+                    return
 
             raise Exception('construction site failed to open')
 
@@ -119,9 +122,11 @@ class ConstructionSite:
 
         while True:
             if channel.recv_ready():
-                print(channel.recv(4096).decode('utf-8'), end='')
+                b = channel.recv(4096)
+                sys.stdout.buffer.write(b)
             if channel.recv_stderr_ready():
-                print(channel.recv_stderr(4096).decode('utf-8'), end='')
+                b = channel.recv_stderr(4096)
+                sys.stdout.buffer.write(b)
             if channel.exit_status_ready():
                 break
 

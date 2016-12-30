@@ -5,9 +5,9 @@ RUN useradd --no-create-home --system -u 10000 vm && mkdir /vm
 
 # install dependencies
 RUN apt-get update \
-    && apt-get install -y qemu-system-x86 \
-        python3-yaml python3-jsonschema python3-paramiko python3-scp \
-        git \
+    && DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confnew" --force-yes \
+        install --yes --no-install-recommends \
+        qemu-system-x86 qemu-utils python3-yaml python3-jsonschema python3-paramiko python3-scp git ca-certificates \
     && apt-get purge \
     && apt-get clean
 

@@ -74,6 +74,9 @@ mkdir -p /mnt/etc/systemd/system/multi-user.target.wants/ /mnt/etc/systemd/syste
 ln -s /lib/systemd/system/systemd-networkd.service /mnt/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
 ln -s /lib/systemd/system/systemd-networkd.socket /mnt/etc/systemd/system/sockets.target.wants/systemd-networkd.socket
 
+# clean this; gets copied from Docker container no boot
+rm /mnt/etc/resolv.conf
+
 # prepare target directory
 mkdir -p $TARGET
 
